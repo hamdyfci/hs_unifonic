@@ -1,7 +1,7 @@
 module UnifonicApi
 
     # using appsid to send sms
-    def self.send_sms_by_appsid(credentials, mobile_number, message,sender,options = nil)
+    def self.send_sms_rest(credentials, mobile_number, message,sender,options = nil)
         # request config
         connection = Faraday.new(:url => credentials[:server]) do |faraday|
           faraday.request :multipart
@@ -32,6 +32,27 @@ module UnifonicApi
         if response.status.to_i.in?(200..299)
           response_body = JSON.parse(response.body)
           message_id = response_body["data"]["MessageID"]
+          return {message_id: message_id , code: 0}
+        else
+          return {error: response.body, code: response.status.to_i}
+        end
+      end
+
+
+      def self.send_smsـwrapper(credentials, mobile_number, message,sender,options = nil)
+        connection = Faraday.new(:url => credentials[:server]) do |faraday|
+          faraday.adapter Faraday.default_adapter
+        end
+        appsid = credentials[:appsid]
+        mobile = mobile_number.gsub(/[^a-z,0-9]/, "")
+        uri = URI("/wrapper/sendSMS.php")
+        params = {appsid: appsid, msg: message, to: mobile , sender: sender, format: 'json', messageBodyEncoding: 'UTF8', smscEncoding: 'UCS2'}
+        response = connection.get do |req|
+          req.url uri.path
+          req.params = params
+        end
+        if response.status.to_i.in?(200..299)
+          message_id = response.body.gsub(/\s+/, "").split(':').last
           return {message_id: message_id , code: 0}
         else
           return {error: response.body, code: response.status.to_i}
