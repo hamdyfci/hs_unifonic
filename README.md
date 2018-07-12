@@ -4,8 +4,9 @@ Gem to send sms using unifonic API
 
 ## Configuration 
 
-- Server [ http://basic.unifonic.com]
-- AppsID
+- server [ http://basic.unifonic.com]
+- appsid
+- method [wrapper or, rest] defualt is wrapper
 
 ## Installation
 
@@ -26,7 +27,7 @@ Or install it yourself as:
 ## Usage
 
 ```ruby
-HsUnifonic.self.send_sms(credentials, mobile_number, message,sender,options)
+HsUnifonic.send_sms(credentials, mobile_number, message,sender,options)
 ```
 
 
