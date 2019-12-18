@@ -6,7 +6,7 @@ module UnifonicApi
       faraday.request :multipart
       faraday.request :url_encoded
       faraday.options[:open_timeout] = options[:open_timeout] if options[:open_timeout]
-      faraday.options[:timeout] = options[:timeout] if options[:timeout]
+      faraday.options[:timeout] = options[:timeout] if options[:timeot]
       faraday.adapter Faraday.default_adapter
     end
     mobile = mobile_number.gsub(/[^a-z,0-9]/, '')
@@ -42,17 +42,29 @@ module UnifonicApi
   def self.send_sms_wrapper(credentials, mobile_number, message, sender, options = {})
     connection = Faraday.new(credentials[:server]) do |faraday|
       faraday.adapter Faraday.default_adapter
-      faraday.options[:open_timeout] = options[:open_timeout] || DEFAULT_OPEN_TIMEOUT
-      faraday.options[:timeout] = options[:timeout] || DEFAULT_TIMEOUT
+      faraday.options[:open_timeout] = options[:open_timeout] if options[:open_timeout]
+      faraday.options[:timeout] = options[:timeout] if options[:timeot]
     end
-    appsid = credentials[:appsid]
     mobile = mobile_number.gsub(/[^a-z,0-9]/, '')
+
     uri = URI('/wrapper/sendSMS.php')
-    params = { appsid: appsid, msg: message, to: mobile, sender: sender, format: 'json', messageBodyEncoding: 'UTF8', smscEncoding: 'UCS2' }
+    appsid = credentials[:appsid]
+
+    params = {
+      appsid: appsid,
+      msg: message,
+      to: mobile,
+      sender: sender,
+      format: 'json',
+      messageBodyEncoding: 'UTF8',
+      smscEncoding: 'UCS2'
+    }
+
     response = connection.get do |req|
       req.url uri.path
       req.params = params
     end
+
     if response.status.to_i.in?(200..299)
       message_id = response.body.gsub(/\s+/, '').split(':').last
       return { message_id: message_id, code: 0 }
